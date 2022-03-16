@@ -1,5 +1,7 @@
 package it.tristana.dungeon.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class BinaryTree {
@@ -10,39 +12,98 @@ public class BinaryTree {
 		this.root = new Node<>(new Structure(new Point(0, 0), new Point(width, height)));
 	}
 	
-	public boolean split(Node<Structure> parent, Random random, int minWidth, int minHeight) {
-		boolean isHorizontal = random.nextBoolean();
-		System.out.println(isHorizontal);
+	public void splitAll(Random random, int minWidth, int minHeight) {
+		List<Node<Structure>> nodes = new ArrayList<>();
+		nodes.add(root);
+		do {
+			List<Node<Structure>> nextGen = new ArrayList<>();
+			nodes.forEach(node -> {
+				if (!split(node, random, minWidth, minHeight)) {
+					return;
+				}
+				addIfNotNull(nextGen, node.getLeftLeaf());
+				addIfNotNull(nextGen, node.getRightLeaf());
+			});
+			nodes = nextGen;
+		} while (nodes.size() > 0);
+	}
+	
+	public Node<Structure> getRoot() {
+		return root;
+	}
+	
+	public static boolean split(Node<Structure> parent, Random random, int minWidth, int minHeight) {
 		Structure structure = parent.getValue();
 		int minX = structure.getMinX();
 		int minY = structure.getMinY();
 		int maxX = structure.getMaxX();
 		int maxY = structure.getMaxY();
-		Point minLeft = new Point(minX, minY);
-		Point maxLeft;
-		Point minRight;
-		Point maxRight = new Point(maxX, maxY);
-		if (isHorizontal) {
-			if (maxY - minY - minHeight <= 0) {
+		Point leftMin = new Point(minX, minY);
+		Point leftMax;
+		Point rightMin;
+		Point rightMax = new Point(maxX, maxY);
+		if (random.nextBoolean()) {
+			int maxLength = getMax(maxY, minY, minHeight);
+			if (maxLength <= 0) {
 				return false;
 			}
-			int height = random.nextInt(maxY - minY - minHeight) + minHeight;
-			maxLeft = new Point(height, maxX);
-			minRight = new Point(minX, height + 1);
+			int length = getLength(random, maxLength, minHeight);
+			leftMax = new Point(maxX, minY + length);
+			rightMin = new Point(minX, minY + length);
 		} else {
-			if (maxX - minX - minWidth <= 0) {
+			int maxLength = getMax(maxX, minX, minWidth);
+			if (maxLength <= 0) {
 				return false;
 			}
-			int width = random.nextInt(maxX - minX - minWidth) + minWidth;
-			maxLeft = new Point(maxY, width);
-			minRight = new Point(width + 1, minY);
+			int length = getLength(random, maxLength, minWidth);
+			leftMax = new Point(minX + length, maxY);
+			rightMin = new Point(minX + length, minY);
 		}
-		parent.setLeftLeaf(new Node<>(new Structure(minLeft, maxLeft)));
-		parent.setRightLeaf(new Node<>(new Structure(minRight, maxRight)));
+		parent.setLeftLeaf(new Node<>(new Structure(leftMin, leftMax)));
+		parent.setRightLeaf(new Node<>(new Structure(rightMin, rightMax)));
 		return true;
 	}
 	
-	public Node<Structure> getRoot() {
-		return root;
+	private static Pair<Point> getNodes(Random random, int minX, int maxX, int minY, int maxY, int minLength, boolean isHorizontal) {
+		int max, min;
+		if (isHorizontal) {
+			max = maxY;
+			min = minY;
+		} else {
+			max = maxX;
+			min = minX;
+		}
+		int maxLength = getMax(max, min, minLength);
+		if (maxLength <= 0) {
+			return null;
+		}
+		int length = getLength(random, max, minLength);
+		int leftX, leftY, rightX, rightY;
+		if (isHorizontal) {
+			leftX = maxX;
+			leftY = minY + length;
+			rightX = minX;
+			rightY = minY + length;
+		} else {
+			leftX = minX + length;
+			leftY = maxY;
+			rightX = minX + length;
+			rightY = minY;
+		}
+		return new Pair<>(new Point(leftX, leftY), new Point(rightX, rightY));
+	}
+	
+	private static int getMax(int max, int min, int minLength) {
+		return max - min - minLength * 2 - 1;
+	}
+	
+	private static int getLength(Random random, int max, int minLength) {
+		return random.nextInt(max) + minLength;
+	}
+	
+	private static <T> void addIfNotNull(List<T> list, T object) {
+		if (object != null) {
+			list.add(object);
+		}
 	}
 }

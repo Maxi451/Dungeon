@@ -2,13 +2,17 @@ package it.tristana.dungeon.util;
 
 public class Node<T> {
 
+	private static char current = 'A';
+	
 	private Node<T> leftLeaf;
 	private Node<T> rightLeaf;
 
 	private T value;
+	private char val;
 
 	public Node(T value) {
 		this.value = value;
+		this.val = current ++;
 	}
 
 	public Node<T> getLeftLeaf() {
@@ -29,5 +33,18 @@ public class Node<T> {
 
 	public T getValue() {
 		return value;
+	}
+	
+	public char getChar() {
+		return val;
+	}
+	
+	public boolean isLeaf() {
+		return leftLeaf == null && rightLeaf == null;
+	}
+	
+	@Override
+	public String toString() {
+		return value.toString();
 	}
 }

@@ -25,4 +25,9 @@ public class Structure {
 	public int getMaxY() {
 		return max.y;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("[%d, %d -> %d, %d]", min.x, min.y, max.x, max.y);
+	}
 }
